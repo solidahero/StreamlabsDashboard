@@ -1,0 +1,376 @@
+<title>Streamlabs Custom Made Dashboard</title>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<h2 id="streamlabsPerson">Jims token in use</h2>
+<input type="checkbox" id="testMode" onclick="update()">
+<label for="test"> Test mode</label><br>
+<input type="checkbox" id="enableNotifications" onchange="updateSettings()">
+<label for="enableNotifications"> Enable Notifications to be activated</label><br>
+<input type="checkbox" id="enableDonations" onchange="updateSettings()">
+<label for="enableDonations"> Enable Donation Notifications</label><br>
+<input type="checkbox" id="enableSuperchat" onchange="updateSettings()">
+<label for="enableSuperchat"> Enable Superchat Notifications</label><br>
+<input type="checkbox" id="enableSubscriber" onchange="updateSettings()">
+<label for="enableSubscriber"> Enable Subscriber Notifications</label><br>
+<input type="checkbox" id="enableMember" onchange="updateSettings()">
+<label for="enableMember"> Enable Member Notifications</label><br>
+<input type="checkbox" id="enableGifted" onchange="updateSettings()">
+<label for="enableGifted"> Enable Gifted Membership Notifications</label><br>
+<input type="password" placeholder="Enter socket token" id="enterSocketToken"></input><br>
+<button onclick="saveToken()">Save Token</button><br><br>
+<input type="password" placeholder="Enter discord webhook" id="enterWebhook"></input><br>
+<button onclick="saveWebhook()">Save Webhook</button>
+<div style="display: table-row; margin:     0 auto;">
+<div style="background-color: green; width:450px; display: table-cell; padding: 34px;" >
+    <h1>Send Custom Donation Message</h1>
+    <label for="name">Name:</label>
+    <input placeholder="Jimmy" type="text" id="name">
+    <br>
+    <label for="amount">Amount:</label>
+    <input placeholder="6.50" type="number" id="amount" step="0.01">
+    <br>
+    <label for="message">Message:</label>
+    <input placeholder="Here is some money" type="text" id="message">
+    <br>
+    <button onclick="sendMessage(document.getElementById('name').value,document.getElementById('message').value,'donation','£' + document.getElementById('amount').value)">Send</button>
+</div>
+<div style="background-color: blue; width:450px; display: table-cell; padding: 34px;" >
+    <h1>Send Custom SuperChat Message</h1>
+    <label for="name2">Name:</label>
+    <input placeholder="Jimmy" type="text" id="name2">
+    <br>
+    <label for="amount2">Amount:</label>
+    <input placeholder="6.50" type="number" id="amount2">
+    <br>
+    <label for="message2">Message:</label>
+    <input placeholder="Here is some money" type="text" id="message2">
+    <br>
+    <button onclick="sendMessage(document.getElementById('name2').value,document.getElementById('message2').value,'superchat','£' + document.getElementById('amount2').value)">Send</button>
+</div>
+<div style="background-color: red; width:450px; display: table-cell; padding: 34px;" >
+    <h1>Send Custom Subscriber Message</h1>
+    <label for="name3">Name:</label>
+    <input placeholder="Jimmy" type="text" id="name3">
+    <br>
+    <button onclick="sendMessageSubscriber(document.getElementById('name3').value)">Send</button>
+</div>
+<div style="background-color: orange; width:450px; display: table-cell; padding: 34px;" >
+    <h1>Send Custom Member Message</h1>
+    <label for="name4">Name:</label>
+    <input placeholder="Jimmy" type="text" id="name4">
+    <br>
+    <label for="months">Amount:</label>
+    <input placeholder="7" type="number" id="months">
+    <br>
+    <label for="message3">Message:</label>
+    <input placeholder="Here is some money" type="text" id="message3">
+    <br>
+    <button onclick="sendMessageMember(document.getElementById('name4').value,document.getElementById('message3').value,'subscription',document.getElementById('months').value)">Send</button>
+</div>
+<div style="background-color: yellow; width:450px; display: table-cell; padding: 34px;" >
+    <h1>Send Custom Member Message</h1>
+    <label for="name5">Gifter:</label>
+    <input placeholder="Jimmy" type="text" id="name5">
+    <br>
+    <label for="name6">Gifted:</label>
+    <input placeholder="Jimmy" type="text" id="name6">
+    <br>
+    <label for="membershipLevelName">Membership Name:</label>
+    <input placeholder="MVP" type="text" id="membershipLevelName">
+    <br>
+    <button onclick="sendMessageMemberGifteddd(document.getElementById('name5').value,document.getElementById('name6').value,document.getElementById('membershipLevelName').value)">Send</button>
+</div>
+</div>
+<p>Made by ritba</p>
+
+<style>
+    div{
+
+    }
+    button {
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin-top: 10px;
+    }
+    label{
+        text-indent: 50px;
+        text-align: justify;
+        letter-spacing: 1px;
+        font-size:20px;
+    }
+    html{
+        background-color: grey;
+    }
+</style>
+</html>
+
+<!--
+To do list:
+make ui look better
+-->
+
+
+
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js' type='text/javascript'></script>
+<script type = 'text/javascript'>
+    const DiscordWebhook = ""
+    const TestWebhook = ""
+    const StreamlabsSocketToken = ""
+    const TestStreamlabsSocketToken = ""
+    if(localStorage.getItem("socketToken") != null){
+        var streamlabs = io(`https://sockets.streamlabs.com?token=${localStorage.getItem("socketToken")}`);
+    }
+    else{
+        console.log(localStorage.getItem("socketToken"))
+    }
+    var webhook = DiscordWebhook
+    var socketToken = StreamlabsSocketToken
+    webhook = TestWebhook
+    socketToken = TestStreamlabsSocketToken
+    var started = false;
+    // if(started)
+        getSettingsOnStart();
+    function updateSettings(){
+        var enableNotifications = document.getElementById("enableNotifications").checked;
+        var enableDonations = document.getElementById("enableDonations").checked;
+        var enableSuperchat = document.getElementById("enableSuperchat").checked;
+        var enableSubscriber = document.getElementById("enableSubscriber").checked;
+        var enableMember = document.getElementById("enableMember").checked;
+        var enableGifted = document.getElementById("enableGifted").checked;
+        localStorage.setItem("enableNotifications",enableNotifications)
+        localStorage.setItem("enableDonations",enableDonations)
+        localStorage.setItem("enableSuperchat",enableSuperchat)
+        localStorage.setItem("enableSubscriber",enableSubscriber)
+        localStorage.setItem("enableMember",enableMember)
+        localStorage.setItem("enableGifted",enableGifted)
+    }
+    function saveToken(){
+        localStorage.setItem("socketToken",document.getElementById("enterSocketToken").value)
+        update();
+    }
+    function saveWebhook(){
+        localStorage.setItem("webhook",document.getElementById("enterWebhook").value)
+        update();
+    }
+    function getSettingsOnStart(){
+        var webhook = localStorage.getItem("webhook")
+        var socketToken = localStorage.getItem("socketToken")
+        var testMode = (localStorage.getItem("testMode") === 'true');
+        var enableNotifications = (localStorage.getItem("enableNotifications") === 'true');
+        var enableDonations = (localStorage.getItem("enableDonations") === 'true');
+        var enableSuperchat = (localStorage.getItem("enableSuperchat") === 'true');
+        var enableSubscriber = (localStorage.getItem("enableSubscriber") === 'true');
+        var enableMember = (localStorage.getItem("enableMember") === 'true');
+        var enableGifted = (localStorage.getItem("enableGifted") === 'true');
+        document.getElementById("enterWebhook").value = webhook
+        document.getElementById("enterSocketToken").value = socketToken
+        document.getElementById("testMode").checked = testMode
+        document.getElementById("enableNotifications").checked = enableNotifications
+        document.getElementById("enableDonations").checked = enableDonations
+        document.getElementById("enableSuperchat").checked = enableSuperchat
+        document.getElementById("enableSubscriber").checked = enableSubscriber
+        document.getElementById("enableMember").checked = enableMember
+        document.getElementById("enableGifted").checked = enableGifted       
+        var started = true;
+        update();
+    }
+    function update() {
+        var testMode = document.getElementById("testMode").checked;
+        localStorage.setItem("testMode",testMode)
+        if (document.getElementById("testMode").checked) {
+            console.log("Test mode enabled")
+            document.getElementById("streamlabsPerson").innerHTML = "Test token is in use";
+            webhook = TestWebhook
+            socketToken = TestStreamlabsSocketToken
+        } else {
+            document.getElementById("streamlabsPerson").innerHTML = "Your token is in use";
+            console.log("Test mode disabled")
+            webhook = localStorage.getItem("webhook")
+            socketToken = localStorage.getItem("socketToken")
+        }
+        try{
+        streamlabs.close()
+        }
+        catch{
+            console.log("Streamlabs socket already closed")
+        }
+        if(socketToken != "")
+            var streamlabs = io(`https://sockets.streamlabs.com?token=${socketToken}`);
+    }
+    function sendMessageMemberGifteddd(name,name2,membershipLevelName){
+        sendMessageMemberGifted(name,membershipLevelName);
+        sendMessageMemberGiftedd(name2,membershipLevelName)
+    }
+    function sendMessage(sender,message,typeofevent,donatedAmount) {
+        if(localStorage.getItem("enableNotifications") === 'true'){
+        const request = new XMLHttpRequest();
+        request.open("POST", webhook);
+
+        request.setRequestHeader('Content-type', 'application/json');
+
+        const params = {
+            username: "Ritba",
+            avatar_url: "https://ritba.live/ritba.png",
+            embeds: [
+                {
+                    "author": {
+                        "name": "Thank you for the " + typeofevent
+                    },
+                    "title": "Sender: " + sender,
+                    "description": "Donation amount:" + donatedAmount + "\nDonation message: **" + message + "**",
+                    "color": 15258703
+                }
+            ]
+        }
+
+        request.send(JSON.stringify(params));
+    }
+    }
+    function sendMessageMember(sender,message,typeofevent,donatedAmount) {
+        if(localStorage.getItem("enableNotifications") === 'true'){
+        const request = new XMLHttpRequest();
+        request.open("POST", webhook);
+
+        request.setRequestHeader('Content-type', 'application/json');
+
+        const params = {
+            username: "Ritba",
+            avatar_url: "https://ritba.live/ritba.png",
+            embeds: [
+                {
+                    "author": {
+                        "name": "Thank you for the " + typeofevent
+                    },
+                    "title": "Sender: " + sender,
+                    "description": "Subcription duration: " + donatedAmount + " months\nDonation message: **" + message + "**",
+                    "color": 15258703
+                }
+            ]
+        }
+
+        request.send(JSON.stringify(params));
+    }
+}
+    function sendMessageMemberGifted(sender,levelGift) {
+        if(localStorage.getItem("enableNotifications") === 'true'){
+        const request = new XMLHttpRequest();
+        request.open("POST", webhook);
+
+        request.setRequestHeader('Content-type', 'application/json');
+
+        const params = {
+            username: "Ritba",
+            avatar_url: "https://ritba.live/ritba.png",
+            embeds: [
+                {
+                    "author": {
+                        "name": "Thank you for gifting a membership"
+                    },
+                    "title": "Sender: " + sender,
+                    "description": "Membership Level: " + levelGift,
+                    "color": 15258703
+                }
+            ]
+        }
+
+        request.send(JSON.stringify(params));
+    }
+    }
+    function sendMessageMemberGiftedd(sender,levelGift) {
+        if(localStorage.getItem("enableNotifications") === 'true'){
+        const request = new XMLHttpRequest();
+        request.open("POST", webhook);
+
+        request.setRequestHeader('Content-type', 'application/json');
+
+        const params = {
+            username: "Ritba",
+            avatar_url: "https://ritba.live/ritba.png",
+            embeds: [
+                {
+                    "author": {
+                        "name": "Recieved a membership"
+                    },
+                    "title": "Reciever: " + sender,
+                    "description": "Membership Level: " + levelGift,
+                    "color": 15258703
+                }
+            ]
+        }
+
+        request.send(JSON.stringify(params));
+    }
+    }
+    function sendMessageSubscriber(sender) {
+        if(localStorage.getItem("enableNotifications") === 'true'){
+        const request = new XMLHttpRequest();
+        request.open("POST", webhook);
+
+        request.setRequestHeader('Content-type', 'application/json');
+
+        const params = {
+            username: "Ritba",
+            avatar_url: "https://ritba.live/ritba.png",
+            embeds: [
+                {
+                    "author": {
+                        "name": "Thank you for Subscribing"
+                    },
+                    "title": "Subsriber: " + sender,
+                    "color": 15258703
+                }
+            ]
+        }
+
+        request.send(JSON.stringify(params));
+    }
+    }
+
+    //Perform Action on event
+    streamlabs.on('event', (eventData) => {
+        if (!eventData.for || eventData.for === 'streamlabs' && eventData.type === 'donation' && enableDonations) {
+            //code to handle donation events
+            console.log(eventData);
+            let donoMessage = eventData.message[0]
+            sendMessage(donoMessage.from,donoMessage.message,eventData.type,donoMessage.formatted_amount);
+        }
+        else if(eventData.for === "youtube_account" && eventData.type === "superchat" && enableSuperchat){
+            console.log(eventData);
+            console.log("superchat")
+            let donoMessage = eventData.message[0]
+            sendMessage(donoMessage.name,donoMessage.comment,eventData.type,donoMessage.displayString);
+        }
+        else if(eventData.for === "youtube_account" && eventData.type === "subscription" && enableMember){
+            console.log(eventData);
+            console.log("subscription")
+            let donoMessage = eventData.message[0]
+            sendMessageMember(donoMessage.name,donoMessage.message,eventData.type,donoMessage.months);
+        }
+        else if(eventData.for === "youtube_account" && eventData.type === "membershipGift" && enableGifted){
+            console.log(eventData);
+            let donoMessage = eventData.message[0]
+            if(eventData.message[0].hasOwnProperty("giftMembershipsLevelName")){
+                sendMessageMemberGifted(donoMessage.name,donoMessage.membershipLevelName);
+            }
+            else if(eventData.message[0].hasOwnProperty("sponsorSince")){
+                sendMessageMemberGiftedd(donoMessage.name,donoMessage.membershipLevelName)
+            }
+        }   
+        else if(eventData.for === "youtube_account" && eventData.type === "follow" && enableSubscriber){
+            console.log(eventData)
+            console.log("subsriber")
+            let donoMessage = eventData.message[0]
+            sendMessageSubscriber(donoMessage.name)
+        }
+        else{
+            console.log(eventData);
+        }
+    });
+</script>
